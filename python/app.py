@@ -1,21 +1,39 @@
+from flask import Flask, request, jsonify, send_from_directory
 import whisper
-import json
+import os
+from flask_cors import CORS
 
+app = Flask(__name__)
+CORS(app)
+
+UPLOAD_FOLDER = os.path.abspath(".")  # thư mục hiện tại
 model = whisper.load_model("base")
-result = model.transcribe("lesson2.mp3")
 
-segments = result["segments"]
+@app.route("/upload", methods=["POST"])
+def upload_audio():
+    file = request.files["file"]
+    filename = "uploaded.mp3"
+    filepath = os.path.join(UPLOAD_FOLDER, filename)
+    file.save(filepath)
 
-data = [
-    {
-        "start": round(seg["start"], 2),
-        "end": round(seg["end"], 2),
-        "transcript": seg["text"].strip()
-    }
-    for seg in segments
-]
+    result = model.transcribe(filepath)
+    segments = [
+        {
+            "start": round(seg["start"], 2),
+            "end": round(seg["end"], 2),
+            "transcript": seg["text"].strip()
+        }
+        for seg in result["segments"]
+    ]
 
-with open("output.json", "w", encoding="utf-8") as f:
-    json.dump(data, f, ensure_ascii=False, indent=2)
+    return jsonify({
+        "audio": filename,
+        "segments": segments
+    })
 
-print("✅ Done! Saved to output.json")
+@app.route("/<path:filename>")
+def serve_file(filename):
+    return send_from_directory(UPLOAD_FOLDER, filename)
+
+if __name__ == "__main__":
+    app.run(port=5000, debug=True)
