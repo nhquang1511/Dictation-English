@@ -2,14 +2,22 @@ import { useEffect, useRef, useState } from "react";
 
 export default function DictationBySegment() {
     const audioRef = useRef(null);
-    const [lesson, setLesson] = useState(null); // 🆕 ban đầu chưa có lesson
+    const [lesson, setLesson] = useState(null);
     const [step, setStep] = useState(0);
-    const [inputs, setInputs] = useState([]);
-    const [showTranscript, setShowTranscript] = useState(false);
+    const [input, setInput] = useState("");
+    const [confirmedWords, setConfirmedWords] = useState([]);
     const [error, setError] = useState("");
-    const [autoPlay, setAutoPlay] = useState(true);
+    const [showTranscript, setShowTranscript] = useState(false);
 
     const currentSegment = lesson?.segments?.[step];
+
+    const normalize = (text) =>
+        text
+            .toLowerCase()
+            .replace(/[.,!?]/g, "") // chỉ xóa dấu câu đơn giản
+            .replace(/\s+/g, " ")   // chuẩn hóa khoảng trắng
+            .trim();
+
 
     const handleUpload = async (e) => {
         const file = e.target.files[0];
@@ -27,99 +35,94 @@ export default function DictationBySegment() {
         if (data.audio && data.segments) {
             setLesson({
                 title: file.name,
-                audio: `http://localhost:5000/${data.audio}`, // fix link audio
-                segments: data.segments
+                audio: `http://localhost:5000/${data.audio}`,
+                segments: data.segments,
             });
             setStep(0);
-            setInputs(Array(data.segments.length).fill(""));
+            setConfirmedWords([]);
+            setInput("");
         }
     };
 
-    const playSegment = (start, end) => {
-        const audio = audioRef.current;
-        if (!audio) return;
+    const transcriptWords = currentSegment
+        ? normalize(currentSegment.transcript).split(/\s+/)
+        : [];
 
-        audio.currentTime = start;
-        audio.play();
 
-        const check = setInterval(() => {
-            if (audio.currentTime >= end) {
-                audio.pause();
-                clearInterval(check);
-            }
-        }, 100);
-    };
+    const currentIndex = confirmedWords.length;
 
-    useEffect(() => {
-        if (!lesson || !autoPlay || !currentSegment) return;
-        playSegment(currentSegment.start, currentSegment.end);
-    }, [step, autoPlay, lesson]);
+    const handleInputChange = (e) => {
+        const value = e.target.value.trim();
+        setInput(value);
 
-    const handleInput = (e) => {
-        const newInputs = [...inputs];
-        newInputs[step] = e.target.value;
-        setInputs(newInputs);
-        setError("");
-    };
+        if (value === "") return;
 
-    const normalize = (text) =>
-        text.toLowerCase().replace(/[^a-z0-9\s]/g, "").replace(/\s+/g, " ").trim();
-
-    const next = () => {
-        const userAnswer = normalize(inputs[step]);
-        const correctAnswer = normalize(currentSegment.transcript);
-
-        if (userAnswer === correctAnswer) {
+        const expected = transcriptWords[currentIndex];
+        if (normalize(value) === expected) {
+            setConfirmedWords([...confirmedWords, expected]);
+            setInput("");
             setError("");
-            if (step < lesson.segments.length - 1) {
-                setAutoPlay(true);
-                setStep(step + 1);
+
+            // Move to next sentence if finished
+            if (currentIndex + 1 === transcriptWords.length) {
+                setTimeout(() => {
+                    if (step < lesson.segments.length - 1) {
+                        setStep(step + 1);
+                        setConfirmedWords([]);
+                        setInput("");
+                    }
+                }, 800);
             }
+        } else if (expected.startsWith(value)) {
+            setError("");
         } else {
-            setError("Incorrect. Please try again.");
-            setAutoPlay(false);
-            playSegment(currentSegment.start, currentSegment.end);
+            setError("Incorrect, try again.");
         }
-    };
-
-    const prev = () => {
-        if (step > 0) {
-            setStep(step - 1);
-            setError("");
-        }
-    };
-
-    const pauseAudio = () => {
-        const audio = audioRef.current;
-        audio.pause();
     };
 
     const playCurrentSegment = () => {
-        if (currentSegment) {
-            playSegment(currentSegment.start, currentSegment.end);
-        }
-    };
+        if (!audioRef.current || !currentSegment) return;
 
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.target.tagName === "TEXTAREA") {
-                if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    next();
-                }
-                if (e.key === "Tab" && !e.ctrlKey && !e.metaKey) {
-                    e.preventDefault();
-                    playCurrentSegment();
-                }
+        audioRef.current.currentTime = currentSegment.start;
+        audioRef.current.play();
+
+        const stop = setInterval(() => {
+            if (audioRef.current.currentTime >= currentSegment.end) {
+                audioRef.current.pause();
+                clearInterval(stop);
             }
-        };
+        }, 100);
+    };
+    useEffect(() => {
+        let loop;
+        const audio = audioRef.current;
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [step, inputs]);
+        if (!audio || !currentSegment) return;
+
+        // Nếu chưa hoàn thành câu, thì lặp lại
+        if (confirmedWords.length < transcriptWords.length) {
+            audio.currentTime = currentSegment.start;
+            audio.play();
+
+            loop = setInterval(() => {
+                if (audio.currentTime >= currentSegment.end) {
+                    audio.currentTime = currentSegment.start;
+                    audio.play();
+                }
+            }, 200);
+        }
+
+        // Nếu người dùng hoàn thành câu, dừng lại
+        return () => {
+            clearInterval(loop);
+            if (audio) audio.pause();
+        };
+    }, [step, confirmedWords]);
 
     return (
-        <div className="p-4 border rounded-xl shadow bg-white">
+        <div className="p-4 max-w-3xl mx-auto">
+            <h1 className="text-2xl font-bold mb-4">Dictation Practice</h1>
+
             <input
                 type="file"
                 accept="audio/mp3"
@@ -128,56 +131,41 @@ export default function DictationBySegment() {
             />
 
             {!lesson ? (
-                <p className="text-gray-600">Please upload an MP3 file to begin.</p>
+                <p>Please upload an MP3 file to start.</p>
             ) : (
                 <>
-                    <h2 className="text-xl font-bold mb-2">{lesson.title}</h2>
-                    <p className="text-gray-600 mb-2">
+                    <audio ref={audioRef} src={lesson.audio} />
+
+                    <h2 className="text-lg font-semibold mb-2">{lesson.title}</h2>
+                    <p>
                         Sentence {step + 1} of {lesson.segments.length}
                     </p>
 
-                    <audio ref={audioRef} src={lesson.audio} />
+                    <div className="mt-4 mb-2 border p-3 rounded bg-gray-50 min-h-[60px]">
+                        {confirmedWords.map((w, i) => (
+                            <span key={i} className="text-green-700 font-medium">
+                                {w}&nbsp;
+                            </span>
+                        ))}
+                    </div>
 
-                    <textarea
+                    <input
+                        type="text"
+                        value={input}
+                        onChange={handleInputChange}
+                        placeholder="Type the next word..."
                         className="w-full p-2 border rounded mb-2"
-                        rows={3}
-                        value={inputs[step]}
-                        onChange={handleInput}
-                        placeholder="Type what you hear..."
                     />
 
-                    {error && <p className="text-red-500 mb-2 font-medium">{error}</p>}
+                    {error && <p className="text-red-500 mb-2">{error}</p>}
 
-                    <div className="flex flex-wrap gap-2 mb-4">
-                        <button
-                            onClick={prev}
-                            className="px-4 py-2 bg-gray-500 text-white rounded disabled:opacity-50"
-                            disabled={step === 0}
-                        >
-                            Previous
-                        </button>
-
-                        <button
-                            onClick={next}
-                            className="px-4 py-2 bg-blue-500 text-white rounded"
-                        >
-                            Check & Next
-                        </button>
-
+                    <div className="flex gap-2 mb-4">
                         <button
                             onClick={playCurrentSegment}
-                            className="px-4 py-2 bg-yellow-500 text-white rounded"
+                            className="px-4 py-2 bg-blue-500 text-white rounded"
                         >
                             ▶ Play
                         </button>
-
-                        <button
-                            onClick={pauseAudio}
-                            className="px-4 py-2 bg-red-500 text-white rounded"
-                        >
-                            ⏸ Pause
-                        </button>
-
                         <button
                             onClick={() => setShowTranscript(!showTranscript)}
                             className="px-4 py-2 bg-green-600 text-white rounded"
@@ -187,7 +175,7 @@ export default function DictationBySegment() {
                     </div>
 
                     {showTranscript && (
-                        <p className="text-green-700">
+                        <p className="bg-gray-100 p-2 rounded text-green-700">
                             <b>Transcript:</b> {currentSegment.transcript}
                         </p>
                     )}
