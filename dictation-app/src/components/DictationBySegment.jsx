@@ -8,7 +8,7 @@ export default function DictationBySegment() {
     const [confirmedWords, setConfirmedWords] = useState([]);
     const [error, setError] = useState("");
     const [showTranscript, setShowTranscript] = useState(false);
-    const [loading, setLoading] = useState(false); // ✅ loading state
+    const [loading, setLoading] = useState(false);
 
     const pauseAudio = () => {
         if (audioRef.current) audioRef.current.pause();
@@ -23,7 +23,13 @@ export default function DictationBySegment() {
         const file = e.target.files[0];
         if (!file) return;
 
-        setLoading(true); // ✅ Show loading
+        setLoading(true);
+
+        // ✅ Dừng và reset audio cũ
+        if (audioRef.current) {
+            audioRef.current.pause();
+            audioRef.current.currentTime = 0;
+        }
 
         const formData = new FormData();
         formData.append("file", file);
@@ -38,18 +44,21 @@ export default function DictationBySegment() {
             if (data.audio && data.segments) {
                 setLesson({
                     title: file.name,
-                    audio: `http://localhost:5000/${data.audio}`,
+                    // ✅ Thêm timestamp để tránh cache
+                    audio: `http://localhost:5000/${data.audio}?t=${Date.now()}`,
                     segments: data.segments,
                 });
                 setStep(0);
                 setConfirmedWords([]);
                 setInput("");
+                setError("");
+                setShowTranscript(false);
             }
         } catch (err) {
             alert("Upload failed. Please try again.");
         }
 
-        setLoading(false); // ✅ Hide loading
+        setLoading(false);
     };
 
     const transcriptWords = currentSegment
@@ -123,6 +132,13 @@ export default function DictationBySegment() {
         };
     }, [step, confirmedWords]);
 
+    // ✅ Ép trình duyệt load lại audio mới
+    useEffect(() => {
+        if (audioRef.current && lesson?.audio) {
+            audioRef.current.load();
+        }
+    }, [lesson?.audio]);
+
     return (
         <div className="container">
             <div className="card">
@@ -135,7 +151,6 @@ export default function DictationBySegment() {
                     className="upload-input"
                 />
 
-                {/* ✅ Loading indicator */}
                 {loading && <p className="loading-text">⏳ Processing... please wait.</p>}
 
                 {!lesson && !loading ? (
