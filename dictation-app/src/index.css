@@ -1,0 +1,112 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+  height: 100%;
+  background: linear-gradient(to bottom right, #e6f8f2, #f9f9f9);
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  padding: 20px;
+}
+
+.card {
+  width: 100%;
+  max-width: 700px;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+}
+
+h1 {
+  font-size: 32px;
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+}
+
+.upload-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  margin-bottom: 15px;
+}
+
+.hint {
+  font-style: italic;
+  color: #666;
+  text-align: center;
+}
+
+.info-box {
+  background-color: #eaf4ff;
+  border: 1px solid #a7cdfa;
+  border-radius: 10px;
+  padding: 10px 15px;
+  margin-bottom: 15px;
+}
+
+.confirmed-words {
+  background-color: #f1f1f1;
+  padding: 10px;
+  min-height: 60px;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-weight: bold;
+  color: green;
+}
+
+.text-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 16px;
+  text-align: center;
+  border: 1px solid #ccc;
+  border-radius: 12px;
+  margin-bottom: 10px;
+}
+
+.error {
+  color: red;
+  font-size: 14px;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.button-group button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  background-color: #4a90e2;
+  color: white;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.button-group button:hover {
+  background-color: #3b7dd8;
+}
+
+.transcript {
+  background-color: #f0fff4;
+  border: 1px solid #91e0b1;
+  padding: 12px;
+  border-radius: 10px;
+  margin-top: 15px;
+  color: #267d4f;
+}
