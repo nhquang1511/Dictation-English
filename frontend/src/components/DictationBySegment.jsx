@@ -8,6 +8,12 @@ export default function DictationBySegment() {
     const [confirmedWords, setConfirmedWords] = useState([]);
     const [error, setError] = useState("");
     const [showTranscript, setShowTranscript] = useState(false);
+    const pauseAudio = () => {
+        if (audioRef.current) {
+            audioRef.current.pause();
+        }
+    };
+
 
     const currentSegment = lesson?.segments?.[step];
 
@@ -165,6 +171,12 @@ export default function DictationBySegment() {
                             className="px-4 py-2 bg-blue-500 text-white rounded"
                         >
                             ▶ Play
+                        </button>
+                        <button
+                            onClick={pauseAudio}
+                            className="px-4 py-2 bg-yellow-500 text-white rounded"
+                        >
+                            ⏸ Pause
                         </button>
                         <button
                             onClick={() => setShowTranscript(!showTranscript)}
