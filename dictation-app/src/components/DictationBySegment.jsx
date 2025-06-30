@@ -9,6 +9,8 @@ export default function DictationBySegment() {
     const [error, setError] = useState("");
     const [showTranscript, setShowTranscript] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [wrongWord, setWrongWord] = useState("");
+
 
     const pauseAudio = () => {
         if (audioRef.current) audioRef.current.pause();
@@ -68,17 +70,23 @@ export default function DictationBySegment() {
     const currentIndex = confirmedWords.length;
 
     const handleInputChange = (e) => {
-        const value = e.target.value.trim();
-        setInput(value);
-
-        if (value === "") return;
-
+        const value = e.target.value;
         const expected = transcriptWords[currentIndex];
-        if (normalize(value) === expected) {
+        const normalizedValue = normalize(value);
+
+        // Nếu người dùng chưa nhập gì, thoát
+        if (value === "") {
+            setInput("");
+            return;
+        }
+
+        if (normalize(normalizedValue) === expected) {
+            // Đúng toàn bộ từ
             setConfirmedWords([...confirmedWords, expected]);
             setInput("");
             setError("");
 
+            // Chuyển sang segment tiếp theo nếu hết từ
             if (currentIndex + 1 === transcriptWords.length) {
                 setTimeout(() => {
                     if (step < lesson.segments.length - 1) {
@@ -88,12 +96,17 @@ export default function DictationBySegment() {
                     }
                 }, 800);
             }
-        } else if (expected.startsWith(value)) {
+        } else if (expected.startsWith(normalizedValue)) {
+            // Đúng một phần, tiếp tục gõ
+            setInput(value);
             setError("");
         } else {
-            setError("Incorrect, try again.");
+            // Sai → Xóa ký tự cuối cùng
+            setInput(value.slice(0, -1));
+            setError("❌ Wrong letter, try again.");
         }
     };
+
 
     const playCurrentSegment = () => {
         if (!audioRef.current || !currentSegment) return;
@@ -142,7 +155,7 @@ export default function DictationBySegment() {
     return (
         <div className="container">
             <div className="card">
-                <h1>👨‍🎓 Dictation Practice</h1>
+                <h1>👨‍🎓 Dictation Practice </h1>
 
                 <input
                     type="file"
@@ -175,11 +188,11 @@ export default function DictationBySegment() {
                                 type="text"
                                 value={input}
                                 onChange={handleInputChange}
-                                placeholder="📝 Type the next word here..."
+                                placeholder="📝 Turn off Unikey and Type the next word here..."
                                 className="text-input"
                             />
 
-                            {error && <p className="error">⚠️ {error}</p>}
+
 
                             <div className="button-group">
                                 <button onClick={playCurrentSegment}>🎧 Play</button>
@@ -194,6 +207,7 @@ export default function DictationBySegment() {
                                     <strong>Transcript:</strong> {currentSegment.transcript}
                                 </div>
                             )}
+                            {error && <p className="error">⚠️ {error}</p>}
                         </>
                     )
                 )}

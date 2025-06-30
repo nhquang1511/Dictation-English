@@ -40,3 +40,15 @@
 .read-the-docs {
   color: #888;
 }
+.app-wrapper {
+  min-height: 100vh;
+  background: #fdfcfb;
+  padding-top: 80px; /* để không bị đè lên timer */
+}
+
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: calc(100vh - 80px);
+}

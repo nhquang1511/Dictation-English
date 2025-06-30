@@ -1,9 +1,13 @@
 import DictationBySegment from "./components/DictationBySegment";
+import StudyTimer from "./components/StudyTimer";
 
 function App() {
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-[#fdfcfb]">
-      <DictationBySegment />
+    <div className="app-wrapper">
+      <StudyTimer studyMinutes={30} />
+      <div className="content">
+        <DictationBySegment />
+      </div>
     </div>
   );
 }
