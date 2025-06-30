@@ -233,10 +233,15 @@ export default function DictationBySegment() {
                                 type="text"
                                 value={input}
                                 onChange={handleInputChange}
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                        goToNextSentence();
+                                    }
+                                }}
                                 placeholder="📝 Type the next word here..."
                                 className="text-input"
-                                disabled={isSentenceCompleted}
                             />
+
 
                             <div className="button-group">
                                 <button onClick={goToPreviousSegment} disabled={step === 0}>⬅️ Back</button>
