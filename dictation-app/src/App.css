@@ -11,9 +11,11 @@
   will-change: filter;
   transition: filter 300ms;
 }
+
 .logo:hover {
   filter: drop-shadow(0 0 2em #646cffaa);
 }
+
 .logo.react:hover {
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
@@ -22,6 +24,7 @@
   from {
     transform: rotate(0deg);
   }
+
   to {
     transform: rotate(360deg);
   }
@@ -40,10 +43,12 @@
 .read-the-docs {
   color: #888;
 }
+
 .app-wrapper {
   min-height: 100vh;
   background: #fdfcfb;
-  padding-top: 80px; /* để không bị đè lên timer */
+  padding-top: 80px;
+  /* để không bị đè lên timer */
 }
 
 .content {
@@ -51,4 +56,23 @@
   justify-content: center;
   align-items: center;
   min-height: calc(100vh - 80px);
+}
+
+.idiom-section {
+  margin-top: 1rem;
+  padding: 1rem;
+  background-color: #f0f8ff;
+  border-left: 4px solid #007bff;
+  border-radius: 8px;
+}
+
+.idiom-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 0.5rem;
+}
+
+.idiom-list li {
+  margin-bottom: 8px;
+  font-size: 16px;
 }
