@@ -9,8 +9,7 @@ export default function DictationBySegment() {
     const [error, setError] = useState("");
     const [showTranscript, setShowTranscript] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [wrongWord, setWrongWord] = useState("");
-
+    const [isLooping, setIsLooping] = useState(true);
 
     const pauseAudio = () => {
         if (audioRef.current) audioRef.current.pause();
@@ -27,7 +26,6 @@ export default function DictationBySegment() {
 
         setLoading(true);
 
-        // ✅ Dừng và reset audio cũ
         if (audioRef.current) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
@@ -46,7 +44,6 @@ export default function DictationBySegment() {
             if (data.audio && data.segments) {
                 setLesson({
                     title: file.name,
-                    // ✅ Thêm timestamp để tránh cache
                     audio: `http://localhost:5000/${data.audio}?t=${Date.now()}`,
                     segments: data.segments,
                 });
@@ -74,19 +71,16 @@ export default function DictationBySegment() {
         const expected = transcriptWords[currentIndex];
         const normalizedValue = normalize(value);
 
-        // Nếu người dùng chưa nhập gì, thoát
         if (value === "") {
             setInput("");
             return;
         }
 
-        if (normalize(normalizedValue) === expected) {
-            // Đúng toàn bộ từ
+        if (normalizedValue === expected) {
             setConfirmedWords([...confirmedWords, expected]);
             setInput("");
             setError("");
 
-            // Chuyển sang segment tiếp theo nếu hết từ
             if (currentIndex + 1 === transcriptWords.length) {
                 setTimeout(() => {
                     if (step < lesson.segments.length - 1) {
@@ -96,17 +90,14 @@ export default function DictationBySegment() {
                     }
                 }, 800);
             }
-        } else if (expected.startsWith(normalizedValue)) {
-            // Đúng một phần, tiếp tục gõ
+        } else if (expected?.startsWith(normalizedValue)) {
             setInput(value);
             setError("");
         } else {
-            // Sai → Xóa ký tự cuối cùng
             setInput(value.slice(0, -1));
             setError("❌ Wrong letter, try again.");
         }
     };
-
 
     const playCurrentSegment = () => {
         if (!audioRef.current || !currentSegment) return;
@@ -122,30 +113,55 @@ export default function DictationBySegment() {
         }, 100);
     };
 
+    const goToPreviousSegment = () => {
+        if (step > 0) {
+            setStep(step - 1);
+            setConfirmedWords([]);
+            setInput("");
+            setError("");
+        }
+    };
+
+    const goToNextSegment = () => {
+        if (step < lesson.segments.length - 1) {
+            setStep(step + 1);
+            setConfirmedWords([]);
+            setInput("");
+            setError("");
+        }
+    };
+
     useEffect(() => {
-        let loop;
         const audio = audioRef.current;
         if (!audio || !currentSegment) return;
 
-        if (confirmedWords.length < transcriptWords.length) {
-            audio.currentTime = currentSegment.start;
-            audio.play();
+        audio.currentTime = currentSegment.start;
+        audio.play();
 
+        let loop;
+
+        if (isLooping) {
             loop = setInterval(() => {
                 if (audio.currentTime >= currentSegment.end) {
                     audio.currentTime = currentSegment.start;
                     audio.play();
                 }
             }, 200);
+        } else {
+            loop = setInterval(() => {
+                if (audio.currentTime >= currentSegment.end) {
+                    audio.pause();
+                    clearInterval(loop);
+                }
+            }, 200);
         }
 
         return () => {
             clearInterval(loop);
-            if (audio) audio.pause();
+            audio.pause();
         };
-    }, [step, confirmedWords]);
+    }, [step, isLooping]);
 
-    // ✅ Ép trình duyệt load lại audio mới
     useEffect(() => {
         if (audioRef.current && lesson?.audio) {
             audioRef.current.load();
@@ -155,7 +171,7 @@ export default function DictationBySegment() {
     return (
         <div className="container">
             <div className="card">
-                <h1>👨‍🎓 Dictation Practice </h1>
+                <h1>👨‍🎓 Dictation Practice</h1>
 
                 <input
                     type="file"
@@ -192,11 +208,14 @@ export default function DictationBySegment() {
                                 className="text-input"
                             />
 
-
-
                             <div className="button-group">
+                                <button onClick={goToPreviousSegment}>⬅️ Back</button>
+                                <button onClick={goToNextSegment}>➡️ Next</button>
                                 <button onClick={playCurrentSegment}>🎧 Play</button>
                                 <button onClick={pauseAudio}>⏸ Pause</button>
+                                <button onClick={() => setIsLooping(!isLooping)}>
+                                    {isLooping ? "🔁 Loop On" : "➡️ Loop Off"}
+                                </button>
                                 <button onClick={() => setShowTranscript(!showTranscript)}>
                                     {showTranscript ? "🙈 Hide" : "📖 Show"} Transcript
                                 </button>
