@@ -1,2 +1,2 @@
 Pip install openai-whisper
-Tại ffmpeg cho Windows
+Tải ffmpeg cho Windows
