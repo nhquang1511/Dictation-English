@@ -175,9 +175,16 @@ export default function RandomSentenceApp() {
                         rows={3}
                         value={userInput}
                         onChange={(e) => setUserInput(e.target.value)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                                e.preventDefault(); // Ngăn xuống dòng
+                                handleCheck();      // Gọi hàm kiểm tra
+                            }
+                        }}
                         placeholder="Bạn hãy viết câu tiếng Anh tại đây..."
                         disabled={loading}
                     />
+
                     <button onClick={handleCheck} disabled={loading || !userInput.trim()}>
                         {loading ? "Đang kiểm tra..." : "Kiểm tra"}
                     </button>
