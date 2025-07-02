@@ -1,5 +1,2 @@
-cd backend
-python app.py
-cd fronend
-npm install
-npm run dev
+Pip install openai-whisper
+Tải ffmpeg cho Windows
