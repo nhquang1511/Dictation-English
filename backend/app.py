@@ -12,7 +12,7 @@ UPLOAD_FOLDER = os.path.abspath(".")
 model = whisper.load_model("base")
 
 used_sentences = set()  # Lưu các câu đã tạo
-GEMINI_API_KEY = "AIzaSyCYp8QXdc0lRYgZ8zBPSERAU0cfTI2DI8g"
+GEMINI_API_KEY = "AIzaSyCalatN9u9CxsYXFI2z5QTiCWhBgulg9nk"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
 @app.route("/random-sentence-gemini", methods=["GET"])
@@ -24,7 +24,7 @@ def get_sentence_from_gemini():
 
     prompt = f"""
     Hãy tạo ra một câu tiếng Việt đơn giản theo trình độ {level}, áp dụng đúng ngữ pháp dạng "{topic}", và là một câu {type_}.
-    Sau đó dịch sang tiếng Anh chính xác.
+    Sau đó dịch sang tiếng Anh chính xác, được phép viết tắc giống người bản xứ.
     KHÔNG được trùng với các câu sau:
     {list(used_sentences)}
 
