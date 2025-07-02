@@ -56,3 +56,36 @@ button:hover {
   border-left: 4px solid #42c86d;
   border-radius: 8px;
 }
+
+.correct-input {
+  border: 2px solid green;
+  background-color: #e6ffe6;
+  /* xanh nhạt */
+}
+
+.incorrect-input {
+  border: 2px solid red;
+  background-color: #ffe6e6;
+  /* đỏ nhạt */
+}
+
+.feedback {
+  margin-top: 10px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.feedback.correct {
+  color: green;
+}
+
+.feedback.incorrect {
+  color: red;
+}
+
+.comparison {
+  background-color: #f5f5f5;
+  padding: 10px;
+  border-radius: 6px;
+  font-family: monospace;
+}
