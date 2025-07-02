@@ -12,7 +12,7 @@ UPLOAD_FOLDER = os.path.abspath(".")
 model = whisper.load_model("base")
 
 used_sentences = set()  # Lưu các câu đã tạo
-GEMINI_API_KEY = "AIzaSyA1RunHla3V5GSnBGCNrYwYquZauix0ZDo"
+GEMINI_API_KEY = "AIzaSyCYp8QXdc0lRYgZ8zBPSERAU0cfTI2DI8g"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
 @app.route("/random-sentence-gemini", methods=["GET"])

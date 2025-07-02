@@ -111,29 +111,13 @@ export default function RandomSentenceApp() {
         fetchSentence();
     }, [level, topic, type]);
 
-    const handleCheck = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch("http://localhost:5000/grammar-check", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    user_en: userInput,
-                    correct_en: sentence.en // Đảm bảo `sentence.en` tồn tại
-                })
-            });
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-            const data = await res.json();
-            setResult(data);
-        } catch (error) {
-            console.error("Error checking grammar:", error);
-            setResult({ corrected: "Có lỗi xảy ra khi kiểm tra.", explanation: "Vui lòng thử lại sau." });
-        } finally {
-            setLoading(false);
-        }
+    const handleCheck = () => {
+        setResult({
+            corrected: sentence.en,
+            is_correct: userInput.trim().toLowerCase() === sentence.en.trim().toLowerCase()
+        });
     };
+
 
     return (
         <div className="random-sentence-app">
@@ -185,17 +169,21 @@ export default function RandomSentenceApp() {
                         disabled={loading}
                     />
 
-                    <button onClick={handleCheck} disabled={loading || !userInput.trim()}>
-                        {loading ? "Đang kiểm tra..." : "Kiểm tra"}
-                    </button>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                        <button onClick={handleCheck} disabled={loading || !userInput.trim()}>
+                            {loading ? "Đang kiểm tra..." : "Kiểm tra"}
+                        </button>
+                        <button onClick={fetchSentence} disabled={loading}>
+                            {loading ? "Đang tải..." : "➡️ Next"}
+                        </button>
+                    </div>
+
                 </div>
             )}
 
             {result && (
                 <div className="feedback">
                     <p><strong>✅ Câu đúng:</strong> {sentence.en}</p>
-                    <p><strong>🛠 Sửa lại:</strong> {result.corrected}</p>
-                    <p><strong>📘 Giải thích:</strong> {result.explanation}</p>
                 </div>
             )}
         </div>
