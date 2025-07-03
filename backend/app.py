@@ -5,6 +5,8 @@ from flask_cors import CORS
 from deep_translator import GoogleTranslator
 import json
 import requests
+from gtts import gTTS
+
 
 app = Flask(__name__)
 CORS(app)
@@ -12,8 +14,23 @@ UPLOAD_FOLDER = os.path.abspath(".")
 model = whisper.load_model("base")
 
 used_sentences = set()  # Lưu các câu đã tạo
-GEMINI_API_KEY = "AIzaSyCalatN9u9CxsYXFI2z5QTiCWhBgulg9nk"
+GEMINI_API_KEY = "AIzaSyCYp8QXdc0lRYgZ8zBPSERAU0cfTI2DI8g"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+
+@app.route("/speak", methods=["POST"])
+def speak_text():
+    data = request.get_json()
+    text = data.get("text", "")
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+
+    try:
+        tts = gTTS(text, lang='en')
+        output_path = os.path.join(UPLOAD_FOLDER, "output.mp3")
+        tts.save(output_path)
+        return jsonify({"audio": "output.mp3"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route("/random-sentence-gemini", methods=["GET"])
 def get_sentence_from_gemini():
@@ -24,7 +41,7 @@ def get_sentence_from_gemini():
 
     prompt = f"""
     Hãy tạo ra một câu tiếng Việt đơn giản theo trình độ {level}, áp dụng đúng ngữ pháp dạng "{topic}", và là một câu {type_}.
-    Sau đó dịch sang tiếng Anh chính xác, được phép viết tắc giống người bản xứ.
+    Sau đó dịch sang tiếng Anh chính xác, được phép viết tắc giống người bản xứ( ngoại trừ 'do you' không được viết tắc).
     KHÔNG được trùng với các câu sau:
     {list(used_sentences)}
 

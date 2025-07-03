@@ -106,7 +106,25 @@ export default function RandomSentenceApp() {
             is_correct: isCorrect,
             highlighted: highlightDiff(sentence.en, userInput)
         });
+        speakText(sentence.en);
         if (isCorrect) fetchSentence(true);
+    };
+    const speakText = async (text) => {
+        try {
+            const res = await fetch("http://localhost:5000/speak", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ text }),
+            });
+            const data = await res.json();
+            if (data.audio) {
+                const audio = new Audio(`http://localhost:5000/${data.audio}?t=${Date.now()}`);
+                audio.play();
+            }
+        } catch (err) {
+            alert("Không thể phát âm thanh.");
+            console.error(err);
+        }
     };
 
     return (
@@ -195,11 +213,7 @@ export default function RandomSentenceApp() {
                         <strong>✅ Câu đúng:</strong>{" "}
                         <span
                             dangerouslySetInnerHTML={{ __html: result.highlighted }}
-                            onClick={() => {
-                                const u = new SpeechSynthesisUtterance(sentence.en);
-                                u.lang = "en-US";
-                                speechSynthesis.speak(u);
-                            }}
+                            onClick={() => speakText(sentence.en)}
                             style={{ cursor: "pointer", textDecoration: "underline" }}
                         />
                     </p>
