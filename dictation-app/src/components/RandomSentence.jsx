@@ -1,12 +1,14 @@
 import { useState, useEffect, useRef } from "react";
 import "./RandomSentenceApp.css";
 
-const levels = ["A1", "A2", "B1", "B2", "C1", "C2"];
+const levels = ["A1", "A2", "B1", "B2", "C1", "C2", "toeic"];
 const types = [
     "khẳng định", "phủ định", "câu hỏi yes/no",
     "câu hỏi wh-", "câu hỏi đuôi", "mệnh lệnh", "câu cảm thán"
 ];
 const topics = [
+    "Công việc hiện tại đơn",
+    "thức ăn và đồ uống -  hiện tại đơn",
     "Hiện tại đơn", "Hiện tại tiếp diễn", "Hiện tại hoàn thành", "Hiện tại hoàn thành tiếp diễn",
     "Quá khứ đơn", "Quá khứ tiếp diễn", "Quá khứ hoàn thành", "Quá khứ hoàn thành tiếp diễn",
     "Tương lai đơn", "Tương lai tiếp diễn", "Tương lai hoàn thành", "Tương lai hoàn thành tiếp diễn",
@@ -18,7 +20,8 @@ const topics = [
     "Động từ khuyết thiếu (Modal verbs)", "Cụm động từ (Phrasal verbs)",
     "Sự hòa hợp chủ vị (Subject-Verb Agreement)", "Gerund và Infinitive (V-ing và To-V)",
     "So sánh (Comparisons)", "Câu hỏi đuôi (Tag questions)", "Cấu trúc WISH",
-    "Cấu trúc IT IS + ADJ + TO-V", "Cấu trúc ENOUGH/TOO", "Câu ghép (Compound Sentence)"
+    "Cấu trúc IT IS + ADJ + TO-V", "Cấu trúc ENOUGH/TOO", "Câu ghép (Compound Sentence)",
+    "sở thích"
 ];
 
 export default function RandomSentenceApp() {
@@ -35,6 +38,9 @@ export default function RandomSentenceApp() {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(false);
     const inputRef = useRef(null);
+    const [count, setCount] = useState(0);
+
+
 
     useEffect(() => {
         fetchSentence(true);
@@ -107,8 +113,18 @@ export default function RandomSentenceApp() {
             highlighted: highlightDiff(sentence.en, userInput)
         });
         speakText(sentence.en);
-        if (isCorrect) fetchSentence(true);
+        if (isCorrect) {
+            setCount(prev => {
+                const newCount = prev + 1;
+                if (newCount === 20) {
+                    alert("🎉 Bạn đã hoàn thành 20 câu! Hãy chuyển sang chủ đề mới.");
+                }
+                return newCount;
+            });
+            fetchSentence(true);
+        }
     };
+
     const speakText = async (text) => {
         try {
             const res = await fetch("http://localhost:5000/speak", {
@@ -130,6 +146,7 @@ export default function RandomSentenceApp() {
     return (
         <div className="random-sentence-app">
             <h2>Luyện Viết Câu Tiếng Anh Theo Ngữ Pháp</h2>
+            {/* <p>🧮 Số câu đã làm đúng trong chủ đề hiện tại: <strong>{count}</strong>/20</p> */}
 
             <div className="controls">
                 <select value={level} onChange={(e) => setLevel(e.target.value)}>
@@ -141,6 +158,7 @@ export default function RandomSentenceApp() {
                     onChange={(e) => {
                         setTopic(e.target.value);
                         setIsTopicSelected(true);
+                        setCount(0); // reset bộ đếm
                     }}
                 >
                     <option value="">🎲 Ngẫu nhiên chủ đề</option>
@@ -153,6 +171,7 @@ export default function RandomSentenceApp() {
                         onChange={(e) => {
                             setType(e.target.value);
                             setIsTypeSelected(true);
+                            setCount(0); // reset bộ đếm
                         }}
                     >
                         <option value="">🎲 Ngẫu nhiên loại câu</option>
@@ -213,7 +232,7 @@ export default function RandomSentenceApp() {
                         <strong>✅ Câu đúng:</strong>{" "}
                         <span
                             dangerouslySetInnerHTML={{ __html: result.highlighted }}
-                            onClick={() => speakText(sentence.en)}
+                            // onClick={() => speakText(sentence.en)}
                             style={{ cursor: "pointer", textDecoration: "underline" }}
                         />
                     </p>
@@ -336,7 +355,7 @@ function getStructureHint(topic, type = "khẳng định") {
         "Trạng từ": "Trạng từ (Adverb): bổ nghĩa cho động từ, tính từ, trạng từ khác (V + adv / adv + adj / adv + adv).",
         "Giới từ": "Giới từ (Preposition): chỉ vị trí, thời gian, cách thức (in, on, at, with, by, for...).",
         "Liên từ": "Liên từ (Conjunction): nối các từ, cụm từ, mệnh đề (and, but, or, so, because, although, if...).",
-        "Mạo từ (a/an/the)": "a/an: dùng trước danh từ đếm được số ít chưa xác định; the: dùng khi danh từ đã xác định.",
+        "Mạo từ (a/an/the)": "a/an: dùng trước danh từ đếm được số ít chưa xác định; the: dùng khi danh từ đã xác định(đùng cả đếm dc và k đếm dc).",
         "Động từ khuyết thiếu (Modal verbs)": "S + modal verb (can/could/may/might/must/should/will/would) + V(nguyên mẫu).",
         "Cụm động từ (Phrasal verbs)": "Động từ + giới từ/trạng từ (ví dụ: look for, turn off, give up, take off).",
 

@@ -41,7 +41,7 @@ def get_sentence_from_gemini():
 
     prompt = f"""
     Hãy tạo ra một câu tiếng Việt đơn giản theo trình độ {level}, áp dụng đúng ngữ pháp dạng "{topic}", và là một câu {type_}.
-    Sau đó dịch sang tiếng Anh chính xác, được phép viết tắc giống người bản xứ( ngoại trừ 'do you' không được viết tắc).
+    Sau đó dịch sang tiếng Anh chính xác. Sử dụng Anh-Mỹ
     KHÔNG được trùng với các câu sau:
     {list(used_sentences)}
 
@@ -150,6 +150,70 @@ def upload_audio():
 @app.route("/<path:filename>")
 def serve_file(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
+
+@app.route("/random-sentence-chinese", methods=["GET"])
+def get_sentence_in_chinese():
+    global used_sentences
+    level = request.args.get("level", "HSK1")
+    topic = request.args.get("topic", "thời gian")
+    type_ = request.args.get("type", "khẳng định")  # mặc định là khẳng định
+
+    prompt = f"""
+    Hãy tạo một câu đơn giản bằng **tiếng Trung giản thể**, phù hợp trình độ {level}, thuộc chủ đề "{topic}", và có dạng câu {type_}.
+    Sau đó:
+    - Dịch chính xác sang **tiếng Việt**
+    - Ghi thêm **phiên âm Pinyin** đầy đủ của câu tiếng Trung.
+
+    KHÔNG được trùng với các câu sau:
+    {list(used_sentences)}
+
+    Trả lời đúng định dạng JSON (chỉ JSON, không thêm gì khác):
+    {{
+      "zh": "câu tiếng Trung",
+      "vi": "nghĩa tiếng Việt tương ứng",
+      "pinyin": "phiên âm Pinyin của câu"
+    }}
+    """
+
+    payload = {
+        "contents": [{"role": "user", "parts": [{"text": prompt}]}],
+        "generationConfig": {
+            "responseMimeType": "application/json"
+        }
+    }
+
+    try:
+        res = requests.post(GEMINI_URL, json=payload)
+        res.raise_for_status()
+        text = res.json()["candidates"][0]["content"]["parts"][0]["text"]
+
+        parsed = json.loads(text)
+        used_sentences.add(parsed["zh"])
+        return jsonify(parsed)
+
+    except json.JSONDecodeError as je:
+        return jsonify({"error": f"Lỗi giải mã JSON: {je}. Nội dung nhận được: {text}"}), 500
+    except Exception as e:
+        return jsonify({"error": f"Lỗi: {str(e)}"}), 500
+
+
+@app.route("/speak-chinese", methods=["POST"])
+def speak_chinese():
+    data = request.get_json()
+    text = data.get("text", "")
+    if not text:
+        return jsonify({"error": "No text provided"}), 400
+
+    try:
+        # Lưu file âm thanh
+        output_path = os.path.join(UPLOAD_FOLDER, "output_zh.mp3")
+        tts = gTTS(text, lang='zh-CN')
+        tts.save(output_path)
+
+        return jsonify({"audio": "output_zh.mp3"})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 
 if __name__ == "__main__":
     app.run(port=5000, debug=True)
