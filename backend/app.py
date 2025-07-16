@@ -8,6 +8,7 @@ import requests
 from gtts import gTTS
 from opencc import OpenCC
 import jieba
+from pypinyin import lazy_pinyin, Style
 
 
 app = Flask(__name__)
@@ -52,7 +53,15 @@ def upload_audio_chinese():
                     vi = GoogleTranslator(source="zh-CN", target="vi").translate(word)
                 except:
                     vi = ""
-                word_translations.append({"word": word, "vi": vi})
+                try:
+                    pinyin = " ".join(lazy_pinyin(word, style=Style.TONE3))  # TONE3 có số
+                except:
+                    pinyin = ""
+                word_translations.append({
+                    "word": word,
+                    "vi": vi,
+                    "pinyin": pinyin
+                })
 
             # Dịch toàn câu
             try:

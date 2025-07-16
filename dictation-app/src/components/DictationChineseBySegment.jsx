@@ -216,10 +216,12 @@ export default function DictationChineseBySegment() {
                             {/* Hiển thị từ cần nhập + nghĩa */}
                             {currentSegment?.word_translations?.[currentIndex] && (
                                 <p className="hint-word">
-                                    🧐 Từ cần nhập: <strong>{currentSegment.word_translations[currentIndex].word}</strong> –
+                                    🧐 Từ cần nhập: <strong>{currentSegment.word_translations[currentIndex].word}</strong>
+                                    {" "}(<span>{currentSegment.word_translations[currentIndex].pinyin}</span>) –
                                     <em> {currentSegment.word_translations[currentIndex].vi}</em>
                                 </p>
                             )}
+
 
                             <div className="button-group">
                                 <button onClick={goToPreviousSegment} disabled={step === 0}>⬅️ Lui</button>
@@ -245,16 +247,17 @@ export default function DictationChineseBySegment() {
                             {/* Hiển thị toàn bộ từ & nghĩa khi hoàn thành */}
                             {isSentenceCompleted && currentSegment?.word_translations && (
                                 <div className="word-meaning-list">
-                                    <p><strong>📘 Từng từ & nghĩa:</strong></p>
+                                    <p><strong>📘 Từng từ, Pinyin & nghĩa:</strong></p>
                                     <ul>
                                         {currentSegment.word_translations.map((item, idx) => (
                                             <li key={idx}>
-                                                <strong>{item.word}</strong>: {item.vi}
+                                                <strong>{item.word}</strong> ({item.pinyin}): {item.vi}
                                             </li>
                                         ))}
                                     </ul>
                                 </div>
                             )}
+
 
                             {error && <p className="error">⚠️ {error}</p>}
                         </>
