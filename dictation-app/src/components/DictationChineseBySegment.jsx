@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 
-export default function DictationBySegment() {
+export default function DictationChineseBySegment() {
     const audioRef = useRef(null);
     const [lesson, setLesson] = useState(null);
     const [step, setStep] = useState(0);
@@ -13,21 +13,22 @@ export default function DictationBySegment() {
     const [isSentenceCompleted, setIsSentenceCompleted] = useState(false);
 
     const currentSegment = lesson?.segments?.[step];
+    const transcriptWords = currentSegment
+        ? currentSegment.transcript.trim().split("")
+        : [];
 
-    const normalize = (text) =>
-        text.toLowerCase().replace(/[.,!?]/g, "").replace(/\s+/g, " ").trim();
+    const currentIndex = confirmedWords.length;
 
     const handleUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
-
         setLoading(true);
 
         const formData = new FormData();
         formData.append("file", file);
 
         try {
-            const res = await fetch("http://localhost:5000/upload", {
+            const res = await fetch("http://localhost:5000/upload-china", {
                 method: "POST",
                 body: formData,
             });
@@ -53,45 +54,37 @@ export default function DictationBySegment() {
         setLoading(false);
     };
 
-    const transcriptWords = currentSegment
-        ? normalize(currentSegment.transcript).split(/\s+/)
-        : [];
-
-    const currentIndex = confirmedWords.length;
-
     const handleInputChange = (e) => {
         if (isSentenceCompleted) return;
 
-        const value = e.target.value;
+        const value = e.target.value.trim();
+        setInput(value); // Cập nhật input mỗi lần gõ
+
         const expected = transcriptWords[currentIndex];
-        const normalizedValue = normalize(value);
 
-        if (value === "") {
-            setInput("");
-            return;
-        }
+        // Chỉ kiểm tra khi bạn nhập đúng 1 ký tự
+        if (value.length === 1) {
+            if (value === expected) {
+                const newConfirmedWords = [...confirmedWords, expected];
+                setConfirmedWords(newConfirmedWords);
+                setInput(""); // Xóa để nhập ký tự kế tiếp
+                setError("");
 
-        if (normalizedValue === expected) {
-            const newConfirmedWords = [...confirmedWords, expected];
-            setConfirmedWords(newConfirmedWords);
-            setInput("");
-            setError("");
-
-            if (newConfirmedWords.length === transcriptWords.length) {
-                setIsSentenceCompleted(true);
-                setIsLooping(false);
-                if (audioRef.current) {
-                    audioRef.current.pause();
+                if (newConfirmedWords.length === transcriptWords.length) {
+                    setIsSentenceCompleted(true);
+                    setIsLooping(false);
+                    audioRef.current?.pause();
                 }
+            } else {
+                setError(`❌ Sai ký tự "${value}". Ký tự đúng: "${expected}"`);
+                // KHÔNG xóa input => bạn sẽ sửa lại được
             }
-        } else if (expected?.startsWith(normalizedValue)) {
-            setInput(value);
-            setError("");
         } else {
-            setInput(value.slice(0, -1));
-            setError("❌ Wrong letter, try again.");
+            // Nếu nhập hơn 1 ký tự thì không làm gì (tuỳ bạn)
+            setError("⚠️ Chỉ nhập từng ký tự một.");
         }
     };
+
 
     const playCurrentSegment = () => {
         if (!audioRef.current || !currentSegment) return;
@@ -125,7 +118,7 @@ export default function DictationBySegment() {
             setIsSentenceCompleted(false);
             setIsLooping(true);
         } else {
-            alert("🎉 Bài học đã hoàn thành!");
+            alert("🎉 Hoàn thành bài luyện!");
             setLesson(null);
             setStep(0);
             setConfirmedWords([]);
@@ -148,23 +141,17 @@ export default function DictationBySegment() {
             return;
         }
 
-        let loopInterval;
-
-        if (isLooping) {
-            loopInterval = setInterval(() => {
-                if (audio.currentTime >= currentSegment.end) {
+        let loopInterval = setInterval(() => {
+            if (audio.currentTime >= currentSegment.end) {
+                if (isLooping) {
                     audio.currentTime = currentSegment.start;
                     audio.play();
-                }
-            }, 200);
-        } else {
-            loopInterval = setInterval(() => {
-                if (audio.currentTime >= currentSegment.end) {
+                } else {
                     audio.pause();
                     clearInterval(loopInterval);
                 }
-            }, 200);
-        }
+            }
+        }, 200);
 
         return () => {
             clearInterval(loopInterval);
@@ -181,8 +168,8 @@ export default function DictationBySegment() {
     return (
         <div className="container">
             <div className="card">
-                <h1>👨‍🎓 Dictation Practice</h1>
-                <p>mục tiêu hoàn thành past 2 toeic max</p>
+                <h1>🈶 Dictation Chinese</h1>
+                <p>Luyện nghe chính tả tiếng Trung (phân từ sẵn từ server)</p>
 
                 <input
                     type="file"
@@ -191,10 +178,10 @@ export default function DictationBySegment() {
                     className="upload-input"
                 />
 
-                {loading && <p className="loading-text">⏳ Processing... please wait.</p>}
+                {loading && <p className="loading-text">⏳ Đang xử lý...</p>}
 
                 {!lesson && !loading ? (
-                    <p className="hint">📂 Upload an MP3 to begin</p>
+                    <p className="hint">📂 Tải lên file MP3 để bắt đầu</p>
                 ) : (
                     lesson && (
                         <>
@@ -202,7 +189,7 @@ export default function DictationBySegment() {
 
                             <div className="info-box">
                                 <h2>{lesson.title}</h2>
-                                <p>📘 Sentence {step + 1} of {lesson.segments.length}</p>
+                                <p>📘 Câu {step + 1} trên {lesson.segments.length}</p>
                             </div>
 
                             <div className="confirmed-words">
@@ -212,20 +199,7 @@ export default function DictationBySegment() {
 
                                 {isSentenceCompleted && currentSegment && (
                                     <div className="completed-sentence-info">
-                                        <p><strong>Translation:</strong> {currentSegment.translation}</p>
-
-                                        {Array.isArray(currentSegment.idioms_found) && currentSegment.idioms_found.length > 0 && (
-                                            <div className="idiom-section">
-                                                <h3>💡 Idioms & Phrases:</h3>
-                                                <ul className="idiom-list">
-                                                    {currentSegment.idioms_found.map((idiom, index) => (
-                                                        <li key={index}>
-                                                            <strong>{idiom.phrase}</strong>: {idiom.vietnamese_meaning}
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            </div>
-                                        )}
+                                        <p><strong>📖 Dịch:</strong> {currentSegment.translation}</p>
                                     </div>
                                 )}
                             </div>
@@ -239,29 +213,30 @@ export default function DictationBySegment() {
                                         goToNextSentence();
                                     }
                                 }}
-                                placeholder="📝 Type the next word here..."
+                                placeholder="📝 Nhập từ kế tiếp..."
                                 className="text-input"
                             />
 
+                            <p className="hint-word">🧐 Từ cần nhập: {transcriptWords[currentIndex]}</p>
 
                             <div className="button-group">
-                                <button onClick={goToPreviousSegment} disabled={step === 0}>⬅️ Back</button>
-                                <button onClick={goToNextSentence} disabled={!isSentenceCompleted}>➡️ Next</button>
-                                <button onClick={playCurrentSegment}>🎧 Play</button>
-                                <button onClick={() => audioRef.current?.pause()}>⏸ Pause</button>
+                                <button onClick={goToPreviousSegment} disabled={step === 0}>⬅️ Lui</button>
+                                <button onClick={goToNextSentence} disabled={!isSentenceCompleted}>➡️ Tiếp</button>
+                                <button onClick={playCurrentSegment}>🎧 Nghe</button>
+                                <button onClick={() => audioRef.current?.pause()}>⏸ Dừng</button>
                                 <button onClick={() => setIsLooping(!isLooping)}>
-                                    {isLooping ? "🔁 Loop On" : "➡️ Loop Off"}
+                                    {isLooping ? "🔁 Lặp lại" : "➡️ Không lặp"}
                                 </button>
                                 <button onClick={() => setShowTranscript(!showTranscript)}>
-                                    {showTranscript ? "🙈 Hide" : "📖 Show"} Transcript
+                                    {showTranscript ? "🙈 Ẩn" : "📖 Hiện"} bản gốc
                                 </button>
                             </div>
 
                             {showTranscript && currentSegment && (
                                 <div className="full-transcript-section">
-                                    <strong>Transcript:</strong> {currentSegment.transcript}
+                                    <strong>📜 Bản gốc:</strong> {currentSegment.transcript}
                                     <br />
-                                    <strong>Translation:</strong> {currentSegment.translation}
+                                    <strong>📘 Dịch:</strong> {currentSegment.translation}
                                 </div>
                             )}
 
