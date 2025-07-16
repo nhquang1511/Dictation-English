@@ -13,9 +13,10 @@ export default function DictationChineseBySegment() {
     const [isSentenceCompleted, setIsSentenceCompleted] = useState(false);
 
     const currentSegment = lesson?.segments?.[step];
-    const transcriptWords = currentSegment
-        ? currentSegment.transcript.trim().split("")
+    const transcriptWords = currentSegment?.word_translations
+        ? currentSegment.word_translations.map((w) => w.word)
         : [];
+
 
     const currentIndex = confirmedWords.length;
 
@@ -58,30 +59,25 @@ export default function DictationChineseBySegment() {
         if (isSentenceCompleted) return;
 
         const value = e.target.value.trim();
-        setInput(value); // Cập nhật input mỗi lần gõ
+        setInput(value);
 
-        const expected = transcriptWords[currentIndex];
+        const expected = transcriptWords[currentIndex]; // từ cần nhập
 
-        // Chỉ kiểm tra khi bạn nhập đúng 1 ký tự
-        if (value.length === 1) {
-            if (value === expected) {
-                const newConfirmedWords = [...confirmedWords, expected];
-                setConfirmedWords(newConfirmedWords);
-                setInput(""); // Xóa để nhập ký tự kế tiếp
-                setError("");
+        // So sánh toàn bộ từ
+        if (value === expected) {
+            const newConfirmedWords = [...confirmedWords, expected];
+            setConfirmedWords(newConfirmedWords);
+            setInput("");
+            setError("");
 
-                if (newConfirmedWords.length === transcriptWords.length) {
-                    setIsSentenceCompleted(true);
-                    setIsLooping(false);
-                    audioRef.current?.pause();
-                }
-            } else {
-                setError(`❌ Sai ký tự "${value}". Ký tự đúng: "${expected}"`);
-                // KHÔNG xóa input => bạn sẽ sửa lại được
+            if (newConfirmedWords.length === transcriptWords.length) {
+                setIsSentenceCompleted(true);
+                setIsLooping(false);
+                audioRef.current?.pause();
             }
         } else {
-            // Nếu nhập hơn 1 ký tự thì không làm gì (tuỳ bạn)
-            setError("⚠️ Chỉ nhập từng ký tự một.");
+            // Cho phép sửa lỗi mà không reset input
+            setError(`❌ Sai từ "${value}". Từ đúng là: "${expected}"`);
         }
     };
 
@@ -217,7 +213,13 @@ export default function DictationChineseBySegment() {
                                 className="text-input"
                             />
 
-                            <p className="hint-word">🧐 Từ cần nhập: {transcriptWords[currentIndex]}</p>
+                            {/* Hiển thị từ cần nhập + nghĩa */}
+                            {currentSegment?.word_translations?.[currentIndex] && (
+                                <p className="hint-word">
+                                    🧐 Từ cần nhập: <strong>{currentSegment.word_translations[currentIndex].word}</strong> –
+                                    <em> {currentSegment.word_translations[currentIndex].vi}</em>
+                                </p>
+                            )}
 
                             <div className="button-group">
                                 <button onClick={goToPreviousSegment} disabled={step === 0}>⬅️ Lui</button>
@@ -237,6 +239,20 @@ export default function DictationChineseBySegment() {
                                     <strong>📜 Bản gốc:</strong> {currentSegment.transcript}
                                     <br />
                                     <strong>📘 Dịch:</strong> {currentSegment.translation}
+                                </div>
+                            )}
+
+                            {/* Hiển thị toàn bộ từ & nghĩa khi hoàn thành */}
+                            {isSentenceCompleted && currentSegment?.word_translations && (
+                                <div className="word-meaning-list">
+                                    <p><strong>📘 Từng từ & nghĩa:</strong></p>
+                                    <ul>
+                                        {currentSegment.word_translations.map((item, idx) => (
+                                            <li key={idx}>
+                                                <strong>{item.word}</strong>: {item.vi}
+                                            </li>
+                                        ))}
+                                    </ul>
                                 </div>
                             )}
 

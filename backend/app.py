@@ -7,6 +7,8 @@ import json
 import requests
 from gtts import gTTS
 from opencc import OpenCC
+import jieba
+
 
 app = Flask(__name__)
 CORS(app)
@@ -39,12 +41,31 @@ def upload_audio_chinese():
         for seg in result["segments"]:
             raw_text = seg["text"].strip()
             simplified_text = cc.convert(raw_text)
-            translation = GoogleTranslator(source="zh-CN", target="vi").translate(simplified_text)
+
+            # Tách từ bằng jieba
+            words = list(jieba.cut(simplified_text))
+
+            # Dịch từng từ
+            word_translations = []
+            for word in words:
+                try:
+                    vi = GoogleTranslator(source="zh-CN", target="vi").translate(word)
+                except:
+                    vi = ""
+                word_translations.append({"word": word, "vi": vi})
+
+            # Dịch toàn câu
+            try:
+                translation = GoogleTranslator(source="zh-CN", target="vi").translate(simplified_text)
+            except:
+                translation = ""
 
             segments.append({
                 "start": round(seg["start"], 2),
                 "end": round(seg["end"], 2),
                 "transcript": simplified_text,
+                "segmented": " ".join(words),
+                "word_translations": word_translations,
                 "translation": translation
             })
 
