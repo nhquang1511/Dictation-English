@@ -24,6 +24,22 @@ used_sentences = set()
 GEMINI_API_KEY = "AIzaSyCYp8QXdc0lRYgZ8zBPSERAU0cfTI2DI8g"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
+def transcribe_audio(audio_path):
+    result = model.transcribe(audio_path,language="en")
+    return result.get("text", "")
+
+
+@app.route('/pronunciation', methods=['POST'])
+def check_pronunciation():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+
+    file = request.files['file']
+    file_path = os.path.join(UPLOAD_FOLDER, file.filename)
+    file.save(file_path)
+
+    transcript = transcribe_audio(file_path)
+    return jsonify({'transcript': transcript})
 
 @app.route("/upload-china", methods=["POST"])
 def upload_audio_chinese():

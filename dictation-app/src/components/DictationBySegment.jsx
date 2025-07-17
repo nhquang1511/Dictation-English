@@ -11,8 +11,12 @@ export default function DictationBySegment() {
     const [loading, setLoading] = useState(false);
     const [isLooping, setIsLooping] = useState(true);
     const [isSentenceCompleted, setIsSentenceCompleted] = useState(false);
-
+    const [pronunciationResult, setPronunciationResult] = useState(null);
     const currentSegment = lesson?.segments?.[step];
+    const [isRecording, setIsRecording] = useState(false);
+    const [recordingCountdown, setRecordingCountdown] = useState(0);
+
+
 
     const normalize = (text) =>
         text.toLowerCase().replace(/[.,!?]/g, "").replace(/\s+/g, " ").trim();
@@ -177,6 +181,65 @@ export default function DictationBySegment() {
             audioRef.current.load();
         }
     }, [lesson?.audio]);
+    const handlePronunciationCheck = async () => {
+        if (!navigator.mediaDevices || !window.MediaRecorder) {
+            alert("Trình duyệt của bạn không hỗ trợ ghi âm");
+            return;
+        }
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const recorder = new MediaRecorder(stream);
+            const chunks = [];
+
+            recorder.ondataavailable = (e) => chunks.push(e.data);
+
+            recorder.onstop = async () => {
+                setIsRecording(false);
+                setRecordingCountdown(0);
+
+                const blob = new Blob(chunks, { type: 'audio/webm' });
+                const formData = new FormData();
+                formData.append("file", blob, "recording.webm");
+
+                const res = await fetch("http://localhost:5000/pronunciation", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const data = await res.json();
+
+                if (data.transcript) {
+                    const original = normalize(currentSegment.transcript);
+                    const spoken = normalize(data.transcript);
+
+                    const correct = original === spoken;
+                    alert(`🔍 Bạn đã nói: "${data.transcript}"\n✅ So với gốc: "${currentSegment.transcript}"\n\n🎯 Kết quả: ${correct ? "CHÍNH XÁC" : "CHƯA ĐÚNG"}`);
+                } else {
+                    alert("Lỗi xử lý phát âm.");
+                }
+            };
+
+            setIsRecording(true);
+            let seconds = 4;
+            setRecordingCountdown(seconds);
+            recorder.start();
+
+            const countdownInterval = setInterval(() => {
+                seconds -= 1;
+                setRecordingCountdown(seconds);
+
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    recorder.stop();
+                }
+            }, 1000);
+        } catch (err) {
+            console.error("Recording error:", err);
+            alert("Không thể ghi âm. Kiểm tra quyền truy cập microphone.");
+        }
+    };
+
 
     return (
         <div className="container">
@@ -249,6 +312,14 @@ export default function DictationBySegment() {
                                 <button onClick={goToNextSentence} disabled={!isSentenceCompleted}>➡️ Next</button>
                                 <button onClick={playCurrentSegment}>🎧 Play</button>
                                 <button onClick={() => audioRef.current?.pause()}>⏸ Pause</button>
+                                <button onClick={handlePronunciationCheck}>🎙 Kiểm tra phát âm
+                                </button>
+                                {isRecording && (
+                                    <p className="recording-text">
+                                        🎙 Đang ghi âm... {recordingCountdown > 0 ? `(${recordingCountdown}s)` : "Đang xử lý..."}
+                                    </p>
+                                )}
+
                                 <button onClick={() => setIsLooping(!isLooping)}>
                                     {isLooping ? "🔁 Loop On" : "➡️ Loop Off"}
                                 </button>

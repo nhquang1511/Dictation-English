@@ -5,6 +5,7 @@ import StudyTimer from "./components/StudyTimer";
 import RandomSentenceApp from "./components/RandomSentence";
 import RandomChineseSentenceApp from "./components/RandomChineseSentenceApp";
 
+
 function App() {
   return (
     <Router>
@@ -16,7 +17,8 @@ function App() {
           <Link to="/" style={{ marginRight: 20 }}>📝 Dictation EN</Link>
           <Link to="/dictation-chinese" style={{ marginRight: 20 }}>🎧 Dictation Chinese</Link>
           <Link to="/translate" style={{ marginRight: 20 }}>🌍 Translate EN</Link>
-          <Link to="/chinese">🈶 Random Chinese Sentence</Link>
+          <Link to="/chinese">🈶 Random Chinese Sentence </Link>
+ 
         </nav>
 
         {/* Route view */}
@@ -25,6 +27,7 @@ function App() {
           <Route path="/dictation-chinese" element={<DictationChineseBySegment />} />
           <Route path="/translate" element={<RandomSentenceApp />} />
           <Route path="/chinese" element={<RandomChineseSentenceApp />} />
+        
         </Routes>
       </div>
     </Router>
