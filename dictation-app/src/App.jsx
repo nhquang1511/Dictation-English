@@ -1,7 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import DictationBySegment from "./components/DictationBySegment";
 import DictationChineseBySegment from "./components/DictationChineseBySegment";
-import StudyTimer from "./components/StudyTimer";
+
 import RandomSentenceApp from "./components/RandomSentence";
 import RandomChineseSentenceApp from "./components/RandomChineseSentenceApp";
 
@@ -10,7 +10,7 @@ function App() {
   return (
     <Router>
       <div className="app-wrapper" style={{ fontFamily: "Arial", padding: 20 }}>
-        <StudyTimer studyMinutes={30} />
+
 
         {/* Navigation */}
         <nav style={{ marginBottom: 20 }}>
@@ -18,7 +18,7 @@ function App() {
           <Link to="/dictation-chinese" style={{ marginRight: 20 }}>🎧 Dictation Chinese</Link>
           <Link to="/translate" style={{ marginRight: 20 }}>🌍 Translate EN</Link>
           <Link to="/chinese">🈶 Random Chinese Sentence </Link>
- 
+
         </nav>
 
         {/* Route view */}
@@ -27,7 +27,7 @@ function App() {
           <Route path="/dictation-chinese" element={<DictationChineseBySegment />} />
           <Route path="/translate" element={<RandomSentenceApp />} />
           <Route path="/chinese" element={<RandomChineseSentenceApp />} />
-        
+
         </Routes>
       </div>
     </Router>

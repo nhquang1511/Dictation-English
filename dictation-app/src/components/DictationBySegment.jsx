@@ -181,6 +181,7 @@ export default function DictationBySegment() {
             audioRef.current.load();
         }
     }, [lesson?.audio]);
+
     const handlePronunciationCheck = async () => {
         if (!navigator.mediaDevices || !window.MediaRecorder) {
             alert("Trình duyệt của bạn không hỗ trợ ghi âm");
@@ -221,7 +222,7 @@ export default function DictationBySegment() {
             };
 
             setIsRecording(true);
-            let seconds = 4;
+            let seconds = 8;
             setRecordingCountdown(seconds);
             recorder.start();
 
@@ -245,7 +246,7 @@ export default function DictationBySegment() {
         <div className="container">
             <div className="card">
                 <h1>👨‍🎓 Dictation Practice</h1>
-                <p>mục tiêu hoàn thành past 2 toeic max</p>
+
 
                 <input
                     type="file"

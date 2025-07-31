@@ -25,7 +25,7 @@ GEMINI_API_KEY = "AIzaSyCYp8QXdc0lRYgZ8zBPSERAU0cfTI2DI8g"
 GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
 def transcribe_audio(audio_path):
-    result = model.transcribe(audio_path,language="en")
+    result = model.transcribe(audio_path, language="en", task="transcribe")
     return result.get("text", "")
 
 
