@@ -1,6 +1,7 @@
 # 🎧 Dictation Practice App
 
 An application for practicing listening, transcription, and pronunciation with audio clips. Supports both English and Chinese.
+https://www.youtube.com/watch?v=UVinGkDrT5Y
 
 [![Watch the video](https://img.youtube.com/vi/UVinGkDrT5Y/maxresdefault.jpg)](https://www.youtube.com/watch?v=UVinGkDrT5Y)
 
