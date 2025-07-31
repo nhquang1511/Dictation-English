@@ -2,7 +2,8 @@
 
 An application for practicing listening, transcription, and pronunciation with audio clips. Supports both English and Chinese.
 
-<iframe width="560" height="315" src="https://www.youtube.com/embed/UVinGkDrT5Y?si=mRdjvnt1TnoMFb80" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+[![Watch the video](https://img.youtube.com/vi/UVinGkDrT5Y/maxresdefault.jpg)](https://www.youtube.com/watch?v=UVinGkDrT5Y)
+
 
 ---
 
@@ -54,3 +55,5 @@ An application for practicing listening, transcription, and pronunciation with a
 ```bash
 pip install -r requirements.txt
 python app.py
+
+
